@@ -1,0 +1,10 @@
+@import "tailwindcss";
+
+@theme {
+  --color-brand-blue: #2c6b8f;
+  --color-brand-orange: #f06c44;
+}
+
+body {
+  @apply bg-slate-900 text-slate-200;
+}
