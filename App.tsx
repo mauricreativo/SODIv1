@@ -12,6 +12,8 @@ import RutasGastronomicasView from './components/RutasGastronomicasView';
 import PatrimonioRuralidadView from './components/PatrimonioRuralidadView';
 import GeoparqueCienciaView from './components/GeoparqueCienciaView';
 import PlanManagerView from './components/PlanManagerView';
+import MarketingView from './components/MarketingView';
+import GestionTuristicaView from './components/GestionTuristicaView';
 
 const App: React.FC = () => {
   const [activeView, setActiveView] = useState('Dashboard');
@@ -20,13 +22,17 @@ const App: React.FC = () => {
     switch (activeView) {
       case 'Negocios':
         return <NegociosView />;
+      case 'Marketing':
+        return <MarketingView />;
+      case 'Gestión Turística':
+        return <GestionTuristicaView />;
       case 'Promociones':
         return <PromotionsDashboard />;
       case 'Rutas Gastronómicas':
         return <RutasGastronomicasView />;
       case 'Patrimonio y Ruralidad':
         return <PatrimonioRuralidadView />;
-      case 'Geoparque y Ciencia':
+      case 'GeoTurismo':
         return <GeoparqueCienciaView />;
       case 'Calendario de Identidad':
         return <CalendarView />;

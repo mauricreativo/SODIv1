@@ -4,6 +4,7 @@ export interface PlanPermissions {
   homeCarousel: boolean;
   topCategory: boolean;
   routeFeatured: boolean;
+  published: boolean;
   // Funciones
   proGallery: boolean;
   historicalStory: boolean;
@@ -17,7 +18,8 @@ export interface SubscriptionPlan {
   id: number;
   name: string;
   price: number;
-  durationInMonths: 1 | 3 | 12;
+  durationInMonths: 1 | 3 | 6 | 12;
+  freeMonths: number;
   permissions: PlanPermissions;
   color: 'gray' | 'blue' | 'orange'; // For badges
 }

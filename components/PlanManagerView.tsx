@@ -20,9 +20,11 @@ const PlanManagerView: React.FC = () => {
             name: '',
             price: 0,
             durationInMonths: 1,
+            freeMonths: 0,
             color: 'gray',
             permissions: {
                 homeCarousel: false, topCategory: false, routeFeatured: false,
+                published: true,
                 proGallery: false, historicalStory: false, campoMarSeal: false,
                 posSync: false, metricsDashboard: false,
             }
@@ -50,7 +52,7 @@ const PlanManagerView: React.FC = () => {
 
         const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
             const { name, value } = e.target;
-            const parsedValue = name === 'price' ? parseInt(value, 10) : name === 'durationInMonths' ? parseInt(value, 10) as 1 | 3 | 12 : value;
+            const parsedValue = (name === 'price' || name === 'freeMonths') ? parseInt(value, 10) : name === 'durationInMonths' ? parseInt(value, 10) as 1 | 3 | 6 | 12 : value;
             setFormData(prev => ({ ...prev, [name]: parsedValue }));
         };
         
@@ -74,7 +76,7 @@ const PlanManagerView: React.FC = () => {
         return (
              <div className="bg-slate-800 rounded-lg shadow-lg p-6 mt-8">
                 <h2 className="text-xl font-bold text-white mb-6 border-b border-slate-700 pb-3">{isCreating ? 'Creando Nuevo Plan' : `Editando: ${plan.name}`}</h2>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+                <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6">
                     <div>
                         <label className="text-xs font-bold uppercase text-[#2c6b8f]">Nombre del Plan</label>
                         <input name="name" value={formData.name} onChange={handleInputChange} className="w-full mt-1 bg-slate-700 p-2 rounded-md text-white" />
@@ -84,10 +86,15 @@ const PlanManagerView: React.FC = () => {
                         <input name="price" type="number" value={formData.price} onChange={handleInputChange} className="w-full mt-1 bg-slate-700 p-2 rounded-md text-white" />
                     </div>
                     <div>
+                        <label className="text-xs font-bold uppercase text-[#2c6b8f]">Meses Gratis</label>
+                        <input name="freeMonths" type="number" value={formData.freeMonths} onChange={handleInputChange} className="w-full mt-1 bg-slate-700 p-2 rounded-md text-white" />
+                    </div>
+                    <div>
                         <label className="text-xs font-bold uppercase text-[#2c6b8f]">Duración</label>
                         <select name="durationInMonths" value={formData.durationInMonths} onChange={handleInputChange} className="w-full mt-1 bg-slate-700 p-2 rounded-md text-white">
                             <option value={1}>1 Mes</option>
                             <option value={3}>3 Meses</option>
+                            <option value={6}>6 Meses</option>
                             <option value={12}>12 Meses</option>
                         </select>
                     </div>
@@ -99,6 +106,7 @@ const PlanManagerView: React.FC = () => {
                         <PermissionToggle label="Home Carousel" pKey="homeCarousel" />
                         <PermissionToggle label="Top Categoría" pKey="topCategory" />
                         <PermissionToggle label="Destacado en Ruta" pKey="routeFeatured" />
+                        <PermissionToggle label="Publicado" pKey="published" />
                     </div>
                      <div className="space-y-3">
                         <h3 className="font-semibold text-slate-400">Funciones</h3>
@@ -147,6 +155,9 @@ const PlanManagerView: React.FC = () => {
                                 <div className="flex-grow">
                                     <h3 className="text-2xl font-bold text-white">{plan.name}</h3>
                                     <p className="text-4xl font-extrabold text-white my-4">${plan.price.toLocaleString('es-CL')} <span className="text-base font-normal text-slate-400">/ {plan.durationInMonths} mes(es)</span></p>
+                                    {plan.freeMonths > 0 && (
+                                        <p className="text-green-400 text-sm font-bold mb-4">🎁 +{plan.freeMonths} mes(es) gratis!</p>
+                                    )}
                                     <ul className="space-y-2 text-sm">
                                         {Object.entries(plan.permissions).map(([key, value]) => (
                                             <li key={key} className={`flex items-center ${value ? 'text-slate-200' : 'text-slate-500 line-through'}`}>

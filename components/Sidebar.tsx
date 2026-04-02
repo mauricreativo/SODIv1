@@ -1,5 +1,23 @@
 
-import React from 'react';
+import React, { useState } from 'react';
+import {
+  DndContext,
+  closestCenter,
+  KeyboardSensor,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  DragEndEvent,
+} from '@dnd-kit/core';
+import {
+  arrayMove,
+  SortableContext,
+  sortableKeyboardCoordinates,
+  verticalListSortingStrategy,
+  useSortable,
+} from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
+import { GripVertical, Megaphone, Briefcase } from 'lucide-react';
 
 const DashboardIcon = () => (
     <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 10h18M3 14h18m-9-4v8m-7 0h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"></path></svg>
@@ -56,53 +74,211 @@ interface SidebarProps {
     setActiveView: (view: string) => void;
 }
 
-const Sidebar: React.FC<SidebarProps> = ({ activeView, setActiveView }) => {
-    const navItems = [
-        { name: 'Dashboard', icon: <DashboardIcon /> },
-        { name: 'Negocios', icon: <BusinessIcon /> },
-        { name: 'Promociones', icon: <PromotionsIcon /> },
-        { name: 'Rutas Gastronómicas', icon: <UtensilsIcon /> },
-        { name: 'Patrimonio y Ruralidad', icon: <LandmarkIcon /> },
-        { name: 'Geoparque y Ciencia', icon: <MountainIcon /> },
-        { name: 'Calendario de Identidad', icon: <CalendarDaysIcon /> },
-        { name: 'Atributos', icon: <AttributeIcon /> },
-        { name: 'Planes', icon: <PlansIcon /> },
-        { name: 'Sectores', icon: <SectorsIcon /> },
-        { name: 'Trekking', icon: <TrekkingIcon /> },
-    ];
+interface NavItem {
+    name: string;
+    icon: React.ReactNode;
+    subItems?: NavItem[];
+}
+
+interface NavItemProps {
+    item: NavItem;
+    activeView: string;
+    setActiveView: (view: string) => void;
+    isSubItem?: boolean;
+}
+
+const SortableNavItem: React.FC<NavItemProps> = ({ item, activeView, setActiveView, isSubItem = false }) => {
+    const {
+        attributes,
+        listeners,
+        setNodeRef,
+        transform,
+        transition,
+        isDragging,
+    } = useSortable({ id: item.name });
+
+    const [isExpanded, setIsExpanded] = useState(true);
+
+    const style = {
+        transform: CSS.Transform.toString(transform),
+        transition,
+        zIndex: isDragging ? 10 : 1,
+        opacity: isDragging ? 0.5 : 1,
+    };
+
+    const hasSubItems = item.subItems && item.subItems.length > 0;
 
     return (
-        <aside className="w-64 bg-slate-800 flex-shrink-0 p-4 flex flex-col">
-            <div className="flex items-center mb-10">
-                <div className="bg-[#2c6b8f] p-2 rounded-md mr-3">
-                    <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 14l-7 7m0 0l-7-7m7 7V3"></path></svg>
+        <li ref={setNodeRef} style={style} className="mb-1 group">
+            <div className="flex items-center">
+                <div
+                    {...attributes}
+                    {...listeners}
+                    className={`p-1 cursor-grab active:cursor-grabbing text-slate-600 hover:text-slate-400 opacity-0 group-hover:opacity-100 transition-opacity ${isSubItem ? 'ml-4' : ''}`}
+                >
+                    <GripVertical size={14} />
                 </div>
-                <h1 className="text-xl font-bold text-white">INN-CORE</h1>
+                <a
+                    href="#"
+                    onClick={(e) => {
+                        e.preventDefault();
+                        if (hasSubItems) {
+                            setIsExpanded(!isExpanded);
+                        }
+                        setActiveView(item.name);
+                    }}
+                    className={`flex-1 flex items-center p-2 rounded-lg transition-colors duration-200 ${
+                        isSubItem ? 'ml-2 py-1.5 text-sm' : ''
+                    } ${
+                        activeView === item.name
+                            ? 'bg-[#f06c44]/20 text-[#f06c44] shadow-md'
+                            : 'text-slate-400 hover:bg-slate-700 hover:text-white'
+                    }`}
+                >
+                    <span className={isSubItem ? 'scale-75' : ''}>{item.icon}</span>
+                    <span className={`ml-3 font-medium ${isSubItem ? 'text-xs' : ''}`}>{item.name}</span>
+                    {hasSubItems && (
+                        <svg 
+                            className={`w-4 h-4 ml-auto transition-transform duration-200 ${isExpanded ? 'rotate-180' : ''}`} 
+                            fill="none" stroke="currentColor" viewBox="0 0 24 24"
+                        >
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
+                        </svg>
+                    )}
+                </a>
             </div>
-            <nav className="flex-1">
-                <ul>
-                    {navItems.map((item) => (
-                        <li key={item.name} className="mb-2">
-                            <a
-                                href="#"
-                                onClick={(e) => {
-                                    e.preventDefault();
-                                    setActiveView(item.name);
-                                }}
-                                className={`flex items-center p-3 rounded-lg transition-colors duration-200 ${
-                                    activeView === item.name
-                                        ? 'bg-[#f06c44]/20 text-[#f06c44] shadow-md'
-                                        : 'text-slate-400 hover:bg-slate-700 hover:text-white'
-                                }`}
-                            >
-                                {item.icon}
-                                <span className="ml-4 font-medium">{item.name}</span>
-                            </a>
-                        </li>
-                    ))}
-                </ul>
+            {hasSubItems && isExpanded && (
+                <SortableContext
+                    items={item.subItems!.map(i => i.name)}
+                    strategy={verticalListSortingStrategy}
+                >
+                    <ul className="mt-1 ml-4 border-l border-slate-700">
+                        {item.subItems!.map((subItem) => (
+                            <SortableNavItem 
+                                key={subItem.name} 
+                                item={subItem} 
+                                activeView={activeView} 
+                                setActiveView={setActiveView} 
+                                isSubItem={true}
+                            />
+                        ))}
+                    </ul>
+                </SortableContext>
+            )}
+        </li>
+    );
+};
+
+const Sidebar: React.FC<SidebarProps> = ({ activeView, setActiveView }) => {
+    const [navItems, setNavItems] = useState<NavItem[]>([
+        { name: 'Dashboard', icon: <DashboardIcon /> },
+        { 
+            name: 'Negocios', 
+            icon: <BusinessIcon />,
+            subItems: [
+                { name: 'Atributos', icon: <AttributeIcon /> },
+            ]
+        },
+        { 
+            name: 'Marketing', 
+            icon: <Megaphone className="w-6 h-6" />,
+            subItems: [
+                { name: 'Promociones', icon: <PromotionsIcon /> },
+            ]
+        },
+        { 
+            name: 'Gestión Turística', 
+            icon: <Briefcase className="w-6 h-6" />,
+            subItems: [
+                { name: 'Sectores', icon: <SectorsIcon /> },
+                { name: 'Rutas Gastronómicas', icon: <UtensilsIcon /> },
+                { name: 'Patrimonio y Ruralidad', icon: <LandmarkIcon /> },
+                { name: 'GeoTurismo', icon: <MountainIcon /> },
+                { name: 'Calendario de Identidad', icon: <CalendarDaysIcon /> },
+                { name: 'Trekking', icon: <TrekkingIcon /> },
+            ]
+        },
+        { name: 'Planes', icon: <PlansIcon /> },
+    ]);
+
+    const sensors = useSensors(
+        useSensor(PointerSensor),
+        useSensor(KeyboardSensor, {
+            coordinateGetter: sortableKeyboardCoordinates,
+        })
+    );
+
+    const handleDragEnd = (event: DragEndEvent) => {
+        const { active, over } = event;
+
+        if (over && active.id !== over.id) {
+            setNavItems((items) => {
+                // This is a simplified move that only works for top-level items
+                // For a truly nested sortable, we'd need a more complex logic
+                // But since the user wants to move "sections", top-level move is usually enough
+                const oldIndex = items.findIndex((i) => i.name === active.id);
+                const newIndex = items.findIndex((i) => i.name === over.id);
+                
+                if (oldIndex !== -1 && newIndex !== -1) {
+                    return arrayMove(items, oldIndex, newIndex);
+                }
+                
+                // Handle sub-item moves within the same parent (simplified)
+                const newItems = [...items];
+                for (const parent of newItems) {
+                    if (parent.subItems) {
+                        const subOldIndex = parent.subItems.findIndex(i => i.name === active.id);
+                        const subNewIndex = parent.subItems.findIndex(i => i.name === over.id);
+                        if (subOldIndex !== -1 && subNewIndex !== -1) {
+                            parent.subItems = arrayMove(parent.subItems, subOldIndex, subNewIndex);
+                            return newItems;
+                        }
+                    }
+                }
+
+                return items;
+            });
+        }
+    };
+
+    return (
+        <aside className="w-64 bg-slate-800 flex-shrink-0 p-4 flex flex-col border-r border-slate-700">
+            <div className="flex flex-col mb-10 px-2">
+                <div className="flex items-center gap-3">
+                    <div className="relative">
+                        <span className="text-3xl font-black tracking-tighter text-white italic">SODI</span>
+                        <div className="absolute -bottom-1 left-0 w-full h-1 bg-[#f06c44] rounded-full"></div>
+                    </div>
+                    <div className="flex flex-col leading-none">
+                        <span className="text-[10px] font-bold text-[#2c6b8f] uppercase tracking-widest">Control</span>
+                        <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Tower</span>
+                    </div>
+                </div>
+            </div>
+            <nav className="flex-1 overflow-y-auto custom-scrollbar">
+                <DndContext
+                    sensors={sensors}
+                    collisionDetection={closestCenter}
+                    onDragEnd={handleDragEnd}
+                >
+                    <SortableContext
+                        items={navItems.map(i => i.name)}
+                        strategy={verticalListSortingStrategy}
+                    >
+                        <ul>
+                            {navItems.map((item) => (
+                                <SortableNavItem
+                                    key={item.name}
+                                    item={item}
+                                    activeView={activeView}
+                                    setActiveView={setActiveView}
+                                />
+                            ))}
+                        </ul>
+                    </SortableContext>
+                </DndContext>
             </nav>
-            <div className="mt-auto">
+            <div className="mt-auto pt-4 border-t border-slate-700">
                  <div className="text-center text-xs text-slate-500">
                     <p>&copy; 2024 TurismoTomé</p>
                     <p>INN-CORE: Enterprise Edition</p>
